@@ -14,17 +14,30 @@ class FollowRepository {
     followUser(userId, targetUserId) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const existingFollow = yield models_1.FollowModel.findOne({ _user_id: userId, following: targetUserId });
+                const follow = yield models_1.FollowModel.findOne({ _user_id: userId });
+                console.log(follow);
+                if (!follow) {
+                    const newFollow = {
+                        _user_id: userId,
+                        following: [targetUserId],
+                        followers: []
+                    };
+                    const createdFollow = yield models_1.FollowModel.create(newFollow);
+                    return createdFollow;
+                }
+                // Check if the user is already following the target user
+                const existingFollow = follow.following.find((id) => {
+                    return id.toString() === targetUserId;
+                });
                 if (existingFollow) {
                     throw new Error('Already following the user');
                 }
-                const newFollow = {
-                    _user_id: userId,
-                    following: [targetUserId],
-                    followers: []
-                };
-                const doc = yield models_1.FollowModel.create(newFollow);
-                return doc;
+                yield models_1.FollowModel.updateOne({ _user_id: userId }, { $addToSet: { following: targetUserId } });
+                const updatedFollow = yield models_1.FollowModel.findOne({ _user_id: userId });
+                if (!updatedFollow) {
+                    throw new Error('No follow found');
+                }
+                return updatedFollow;
             }
             catch (error) {
                 console.error('Error in followUser:', error);
@@ -39,8 +52,9 @@ class FollowRepository {
                 if (!follow) {
                     throw new Error('User is not following anyone');
                 }
-                follow.following = follow.following.filter(id => id !== targetUserId);
-                console.log(follow.following);
+                follow.following = follow.following.filter((id) => {
+                    return id.toString() !== targetUserId;
+                });
                 yield follow.save();
                 const result = yield models_1.FollowModel.findOne({ _user_id: userId });
                 return result;

@@ -10,23 +10,38 @@ interface NewFollow {
 class FollowRepository {
     async followUser(userId: string, targetUserId: string): Promise<IFollow> {
         try {
-            const existingFollow = await FollowModel.findOne({ _user_id: userId, following: targetUserId });
+            const follow = await FollowModel.findOne({ _user_id: userId });
+            console.log(follow);
+            if(!follow){
+                const newFollow: NewFollow = {
+                    _user_id: userId,
+                    following: [targetUserId],
+                    followers: []
+                };
+                const createdFollow = await FollowModel.create(newFollow);
+                return createdFollow;
+            }
+            // Check if the user is already following the target user
+            const existingFollow = follow.following.find((id) =>{
+                return id.toString()===targetUserId;
+            });
 
             if (existingFollow) {
                 throw new Error('Already following the user');
             }
 
-            const newFollow: NewFollow = {
-                _user_id: userId,
-                following: [targetUserId],
-                followers: []
-            };
-
-            const doc = await FollowModel.create(newFollow);
-            return doc;
+            await FollowModel.updateOne(
+                { _user_id: userId },
+                { $addToSet: { following: targetUserId } }
+            );
+            const updatedFollow = await FollowModel.findOne({ _user_id: userId });
+            if(!updatedFollow){
+                throw new Error('No follow found');
+            }
+            return updatedFollow;
         } catch (error) {
             console.error('Error in followUser:', error);
-            throw error; 
+            throw error;
         }
     }
 
@@ -37,9 +52,9 @@ class FollowRepository {
             if (!follow) {
                 throw new Error('User is not following anyone');
             }
-
-            follow.following =  follow.following.filter(id => id !== targetUserId);
-            console.log(follow.following);
+            follow.following =  follow.following.filter((id)=>{
+                return id.toString()!==targetUserId;
+            });
 
             await follow.save();
             const result =await FollowModel.findOne({ _user_id: userId });

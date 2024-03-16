@@ -3,9 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import config from '../config/config';
 import { JwtPayload } from 'jsonwebtoken';
 
-// Define a custom Request type with the user property
 interface RequestWithUser extends Request {
-    user: string | JwtPayload; // Change this to match the type of decodedToken
+    user: string | JwtPayload; 
 }
 
 // Middleware function for authenticating requests
@@ -24,6 +23,6 @@ export const isAuthenticated = (req: RequestWithUser, res: Response, next: NextF
     }
 
     req.user = decodedToken; // Assign the decoded token to the user property of the request
-    console.log(req.user)
+    // console.log(req.user)
     next(); // Call the next middleware
 };
