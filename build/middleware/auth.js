@@ -19,7 +19,7 @@ const isAuthenticated = (req, res, next) => {
         return res.status(401).json({ message: 'Unauthorized - Invalid token' });
     }
     req.user = decodedToken; // Assign the decoded token to the user property of the request
-    console.log(req.user);
+    // console.log(req.user)
     next(); // Call the next middleware
 };
 exports.isAuthenticated = isAuthenticated;

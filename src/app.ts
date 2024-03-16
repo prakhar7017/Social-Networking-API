@@ -33,6 +33,9 @@ class Express{
     }
 
     public listen(): void{
+        this.app.get('/health', (req, res) => {
+            res.status(200).send('Server is running');
+        });
         this.server.listen(config.server.port, () => {
             console.log(`Server running on port ${config.server.port}`);
         });
