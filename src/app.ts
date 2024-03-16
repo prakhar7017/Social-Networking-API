@@ -25,6 +25,9 @@ class Express{
         this.app.use(userRoutes);
         this.app.use(postRoutes);
         this.app.use(followRoute);
+        this.app.use('/health', (req, res) => {
+            res.status(200).send('Server is running');
+        });
 
         this.app.use((req, res, next) => {
             next(createError(404));
@@ -33,9 +36,7 @@ class Express{
     }
 
     public listen(): void{
-        this.app.get('/health', (req, res) => {
-            res.status(200).send('Server is running');
-        });
+       
         this.server.listen(config.server.port, () => {
             console.log(`Server running on port ${config.server.port}`);
         });
